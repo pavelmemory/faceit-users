@@ -1,0 +1,34 @@
+version: "3"
+
+networks:
+  integration-tests:
+    driver: bridge
+
+services:
+  faceit-users:
+    build: "."
+    environment:
+      LOG_LEVEL: "debug"
+      STORAGE_ADDR: "postgres:5432"
+    ports:
+      - "8080:8080"
+    networks:
+      - integration-tests
+    depends_on:
+      - "postgres"
+    restart: always
+
+  postgres:
+    image: "postgres:11.0-alpine"
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      - "./migrations/postgres:/docker-entrypoint-initdb.d"
+    networks:
+      - integration-tests
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
